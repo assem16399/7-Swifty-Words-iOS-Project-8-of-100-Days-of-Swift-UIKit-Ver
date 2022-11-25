@@ -10,10 +10,15 @@ import UIKit
 class ViewController: UIViewController {
 
     var cluesLabel:UILabel!
-    var answersLabel:UILabel!
+    var hintsLabel:UILabel!
     var currentAnswerTextField:UITextField!
     var scoreLabel:UILabel!
     var letterButtons = [UIButton]()
+    var activatedLetterButtons = [UIButton]()
+    
+    var solutions = [String]()
+    var score = 0
+    var level = 1
     
     override func loadView() {
         configMainView()
@@ -36,12 +41,14 @@ class ViewController: UIViewController {
         let submitButton = UIButton(type: .system)
         submitButton.translatesAutoresizingMaskIntoConstraints = false
         submitButton.setTitle("Submit", for: .normal)
+        submitButton.addTarget(self, action: #selector(onSubmitTapped), for: .touchUpInside)
         view.addSubview(submitButton)
 
         //configuring clearButton
         let clearButton = UIButton(type: .system)
         clearButton.translatesAutoresizingMaskIntoConstraints = false
         clearButton.setTitle("Clear", for: .normal)
+        clearButton.addTarget(self, action: #selector(onClearTapped), for: .touchUpInside)
         view.addSubview(clearButton)
 
         //Configure LetterButtons
@@ -60,10 +67,10 @@ class ViewController: UIViewController {
             cluesLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor),
             cluesLabel.widthAnchor.constraint(equalTo: view.layoutMarginsGuide.widthAnchor, multiplier: 0.6,constant: -100),
             
-            answersLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -100.0),
-            answersLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor),
-            answersLabel.widthAnchor.constraint(equalTo: view.layoutMarginsGuide.widthAnchor, multiplier: 0.4,constant: -100),
-            answersLabel.heightAnchor.constraint(equalTo: cluesLabel.heightAnchor),
+            hintsLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -100.0),
+            hintsLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor),
+            hintsLabel.widthAnchor.constraint(equalTo: view.layoutMarginsGuide.widthAnchor, multiplier: 0.4,constant: -100),
+            hintsLabel.heightAnchor.constraint(equalTo: cluesLabel.heightAnchor),
             
             currentAnswerTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             currentAnswerTextField.topAnchor.constraint(equalTo: cluesLabel.bottomAnchor, constant: 20.0),
@@ -87,6 +94,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        loadLevel()
     }
     
     func configScoreLabel() {
@@ -108,14 +116,14 @@ class ViewController: UIViewController {
     }
 
     func configAnswersLabel() {
-        answersLabel = UILabel()
-        answersLabel.translatesAutoresizingMaskIntoConstraints = false
-        answersLabel.font = .systemFont(ofSize: 24.0)
-        answersLabel.textAlignment = .right
-        answersLabel.numberOfLines = 0
-        answersLabel.text = "ANSWERS"
-        answersLabel.setContentHuggingPriority(UILayoutPriority(1.0), for: .vertical)
-        view.addSubview(answersLabel)
+        hintsLabel = UILabel()
+        hintsLabel.translatesAutoresizingMaskIntoConstraints = false
+        hintsLabel.font = .systemFont(ofSize: 24.0)
+        hintsLabel.textAlignment = .right
+        hintsLabel.numberOfLines = 0
+        hintsLabel.text = "ANSWERS"
+        hintsLabel.setContentHuggingPriority(UILayoutPriority(1.0), for: .vertical)
+        view.addSubview(hintsLabel)
     }
     
     func configCurrentAnswerTextField() {
@@ -143,10 +151,59 @@ class ViewController: UIViewController {
                 button.frame = CGRect(x: width*colu, y: height*row, width: width, height: height)
                 button.setTitle("WWW", for: .normal)
                 button.titleLabel?.font = .systemFont(ofSize: 36.0)
+                button.addTarget(self, action: #selector(onLetterTapped), for: .touchUpInside)
                 buttonsView.addSubview(button)
                 letterButtons.append(button)
             }
         }
     }
+    
+    func loadLevel() {
+        var clues = ""
+        var formattedHints = ""
+        var letterBits = [String]()
+        
+        guard let levelFileUrl = Bundle.main.url(forResource: "level\(level)", withExtension: "txt") else{return}
+        
+        guard let levelContents = try? String(contentsOf: levelFileUrl) else{return}
+        
+        let levelLines = levelContents.components(separatedBy: "\n").shuffled()
+        
+        for (index,line) in levelLines.enumerated() {
+            let lineParts = line.components(separatedBy: ": ")
+            let unformattedSolution = lineParts[0]
+            let clue = lineParts[1]
+            clues += "\(index + 1).\(clue)\n"
+            let formattedSolution = unformattedSolution.replacingOccurrences(of: "|", with: "")
+            formattedHints += "\(formattedSolution.count) letters\n"
+            solutions.append(formattedSolution)
+            let bits = unformattedSolution.components(separatedBy: "|")
+            letterBits += bits
+        }
+        cluesLabel.text = clues.trimmingCharacters(in: .whitespacesAndNewlines)
+        hintsLabel.text = formattedHints.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        letterBits.shuffle()
+        
+        if letterButtons.count == letterBits.count {
+            for index in letterButtons.indices {
+                letterButtons[index].setTitle(letterBits[index], for: .normal)
+            }
+        }
+        print(solutions)
+    }
+    
+    @objc func onSubmitTapped(_ sender: UIButton){
+        print("Submit Tapped")
+    }
+    
+    @objc func onClearTapped(_ sender: UIButton){
+        print("Clear Tapped")
+    }
+    
+    @objc func onLetterTapped(_ sender: UIButton){
+        print("Letter Tapped")
+    }
+    
 }
 

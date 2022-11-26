@@ -17,7 +17,11 @@ class ViewController: UIViewController {
     var activatedLetterButtons = [UIButton]()
     
     var solutions = [String]()
-    var score = 0
+    var score = 0 {
+        didSet {
+            scoreLabel.text = "Score: \(score)"
+        }
+    }
     var level = 1
     
     override func loadView() {
@@ -194,15 +198,52 @@ class ViewController: UIViewController {
     }
     
     @objc func onSubmitTapped(_ sender: UIButton){
-        print("Submit Tapped")
+        guard let textFieldText = currentAnswerTextField.text else{return}
+        guard let indexOfAnswer = solutions.firstIndex(of: textFieldText) else {return}
+        currentAnswerTextField.text?.removeAll()
+        activatedLetterButtons.removeAll()
+        score += 1
+        var hintsList = hintsLabel.text?.components(separatedBy: "\n")
+        hintsList?[indexOfAnswer] = textFieldText
+        hintsLabel.text = hintsList?.joined(separator: "\n")
+        
+        print(solutions.count)
+        if score % 7 == 0 && level < 2 {
+            let ac = UIAlertController(title: "Well Done!", message: "Are you ready for the next level?", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Let's Gooo", style: .default, handler: {[unowned self]_ in
+                self.level = 2
+                solutions.removeAll()
+                for button in self.letterButtons {
+                    button.isEnabled = true
+                }
+                self.loadLevel()
+            }))
+            present(ac, animated: true)
+        }
     }
     
+    
+    
+    
+    
+    
     @objc func onClearTapped(_ sender: UIButton){
-        print("Clear Tapped")
+        currentAnswerTextField.text?.removeAll()
+        for button in activatedLetterButtons {
+            button.isEnabled = true
+        }
+        activatedLetterButtons.removeAll()
     }
     
     @objc func onLetterTapped(_ sender: UIButton){
-        print("Letter Tapped")
+        guard let letterText = sender.titleLabel?.text else {return}
+
+        activatedLetterButtons.append(sender)
+        
+        currentAnswerTextField.text = currentAnswerTextField.text?.appending(letterText)
+
+        sender.isEnabled = false
+
     }
     
 }

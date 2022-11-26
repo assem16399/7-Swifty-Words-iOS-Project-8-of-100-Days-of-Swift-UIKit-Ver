@@ -17,35 +17,33 @@ class ViewController: UIViewController {
     var activatedLetterButtons = [UIButton]()
     
     var solutions = [String]()
+    var answeredQuestions = 0
+    
     var score = 0 {
         didSet {
             scoreLabel.text = "Score: \(score)"
         }
     }
-    var level = 1
     
+    var level = 1
     override func loadView() {
-        configMainView()
-        
         // Start Builing Your UI In Code
-        
-        // Configuring scoreLable
+
+        configMainView()
+            
         configScoreLabel()
         
-        // Configuring cluesLabel
         configCluesLabel()
         
-        // Configuring answersLabel
         configAnswersLabel()
         
-        // Configuring currentAnswer
         configCurrentAnswerTextField()
 
-        //configuring submitButton
         let submitButton = UIButton(type: .system)
         submitButton.translatesAutoresizingMaskIntoConstraints = false
         submitButton.setTitle("Submit", for: .normal)
         submitButton.addTarget(self, action: #selector(onSubmitTapped), for: .touchUpInside)
+        submitButton.configuration = .filled()
         view.addSubview(submitButton)
 
         //configuring clearButton
@@ -80,7 +78,7 @@ class ViewController: UIViewController {
             currentAnswerTextField.topAnchor.constraint(equalTo: cluesLabel.bottomAnchor, constant: 20.0),
             currentAnswerTextField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
             
-            submitButton.topAnchor.constraint(equalTo: currentAnswerTextField.bottomAnchor),
+            submitButton.topAnchor.constraint(equalTo: currentAnswerTextField.bottomAnchor,constant: 10),
             submitButton.centerXAnchor.constraint(equalTo: view.centerXAnchor,constant: -100),
             submitButton.heightAnchor.constraint(equalToConstant: 44.0),
             
@@ -199,16 +197,23 @@ class ViewController: UIViewController {
     
     @objc func onSubmitTapped(_ sender: UIButton){
         guard let textFieldText = currentAnswerTextField.text else{return}
-        guard let indexOfAnswer = solutions.firstIndex(of: textFieldText) else {return}
+        guard let indexOfAnswer = solutions.firstIndex(of: textFieldText) else {
+            score -= 1
+            let ac = UIAlertController(title: "OOPS!!!", message: "Try another guess",preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Okay", style: .default))
+            present(ac, animated: true)
+            return
+            
+        }
         currentAnswerTextField.text?.removeAll()
         activatedLetterButtons.removeAll()
         score += 1
+        answeredQuestions += 1
         var hintsList = hintsLabel.text?.components(separatedBy: "\n")
         hintsList?[indexOfAnswer] = textFieldText
         hintsLabel.text = hintsList?.joined(separator: "\n")
         
-        print(solutions.count)
-        if score % 7 == 0 && level < 2 {
+        if answeredQuestions % 7 == 0 && level < 2 {
             let ac = UIAlertController(title: "Well Done!", message: "Are you ready for the next level?", preferredStyle: .alert)
             ac.addAction(UIAlertAction(title: "Let's Gooo", style: .default, handler: {[unowned self]_ in
                 self.level = 2
@@ -222,11 +227,6 @@ class ViewController: UIViewController {
         }
     }
     
-    
-    
-    
-    
-    
     @objc func onClearTapped(_ sender: UIButton){
         currentAnswerTextField.text?.removeAll()
         for button in activatedLetterButtons {
@@ -237,14 +237,8 @@ class ViewController: UIViewController {
     
     @objc func onLetterTapped(_ sender: UIButton){
         guard let letterText = sender.titleLabel?.text else {return}
-
         activatedLetterButtons.append(sender)
-        
         currentAnswerTextField.text = currentAnswerTextField.text?.appending(letterText)
-
         sender.isEnabled = false
-
     }
-    
 }
-

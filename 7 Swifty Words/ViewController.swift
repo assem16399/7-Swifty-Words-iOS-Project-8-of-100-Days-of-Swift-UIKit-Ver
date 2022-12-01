@@ -96,7 +96,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        loadLevel()
+        performSelector(inBackground: #selector(loadLevel), with: nil)
     }
     
     func configScoreLabel() {
@@ -160,7 +160,7 @@ class ViewController: UIViewController {
         }
     }
     
-    func loadLevel() {
+    @objc func loadLevel() {
         var clues = ""
         var formattedHints = ""
         var letterBits = [String]()
@@ -182,17 +182,27 @@ class ViewController: UIViewController {
             let bits = unformattedSolution.components(separatedBy: "|")
             letterBits += bits
         }
-        cluesLabel.text = clues.trimmingCharacters(in: .whitespacesAndNewlines)
-        hintsLabel.text = formattedHints.trimmingCharacters(in: .whitespacesAndNewlines)
-        
         letterBits.shuffle()
+
+        updateUI(clues: clues, hints: formattedHints, letterBits: letterBits)
+
+    }
+    
+     func updateUI(clues:String, hints:String,letterBits:[String]) {
+         DispatchQueue.main.async {
+             [weak self] in
+             self?.cluesLabel.text = clues.trimmingCharacters(in: .whitespacesAndNewlines)
+             self?.hintsLabel.text = hints.trimmingCharacters(in: .whitespacesAndNewlines)
+             
+             
+             if self?.letterButtons.count == letterBits.count {
+                 guard let letterButtonsRange = self?.letterButtons.indices else{return}
+                 for index in letterButtonsRange {
+                     self?.letterButtons[index].setTitle(letterBits[index], for: .normal)
+                 }
+             }
+         }
         
-        if letterButtons.count == letterBits.count {
-            for index in letterButtons.indices {
-                letterButtons[index].setTitle(letterBits[index], for: .normal)
-            }
-        }
-        print(solutions)
     }
     
     @objc func onSubmitTapped(_ sender: UIButton){
@@ -221,7 +231,7 @@ class ViewController: UIViewController {
                 for button in self.letterButtons {
                     button.isEnabled = true
                 }
-                self.loadLevel()
+                self.performSelector(inBackground: #selector(loadLevel), with: nil)
             }))
             present(ac, animated: true)
         }

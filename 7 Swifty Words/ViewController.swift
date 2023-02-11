@@ -229,7 +229,9 @@ class ViewController: UIViewController {
                 self.level = 2
                 solutions.removeAll()
                 for button in self.letterButtons {
-                    button.isEnabled = true
+                    UIView.animate(withDuration: 1, delay: 0){
+                        button.alpha = 1
+                    }
                 }
                 self.performSelector(inBackground: #selector(loadLevel), with: nil)
             }))
@@ -240,7 +242,9 @@ class ViewController: UIViewController {
     @objc func onClearTapped(_ sender: UIButton){
         currentAnswerTextField.text?.removeAll()
         for button in activatedLetterButtons {
-            button.isEnabled = true
+            UIView.animate(withDuration: 1, delay: 0){
+                button.alpha = 1
+            }
         }
         activatedLetterButtons.removeAll()
     }
@@ -249,6 +253,8 @@ class ViewController: UIViewController {
         guard let letterText = sender.titleLabel?.text else {return}
         activatedLetterButtons.append(sender)
         currentAnswerTextField.text = currentAnswerTextField.text?.appending(letterText)
-        sender.isEnabled = false
+        UIView.animate(withDuration: 1, delay: 0){
+            sender.alpha = 0
+        }
     }
 }
